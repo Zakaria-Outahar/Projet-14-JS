@@ -1,8 +1,11 @@
 const container = document.querySelector('.grille');
+const affichage = document.querySelector('h3');
+let resultat = 0;
 let toutesLesDivs;
 let alienInvaders = [];
 let tireurPosition = 229;
 let direction = 1;
+let width = 20;
 
 function creationGrilleEtAliens(){
     let indexAttr = 0;
@@ -100,6 +103,74 @@ function bougerLesAliens(){
     for(let i = 0; i < alienInvaders.length; i++){
         toutesLesDivs[alienInvaders[i]].classList.add('alien');
     }
+
+    if(toutesLesDivs[tireurPosition].classList.contains('alien', 'tireur')){
+        affichage.textContent = "Game Over";
+        toutesLesDivs[tireurPosition].classList.add('boom');
+        document.removeEventListener('keydown', deplacerLeTireur);
+        clearInterval(invaderId);
+    }
+
+    for (let i = 0; i < alienInvaders.length; i++) {
+        if(alienInvaders[i] > toutesLesDivs.length - width){
+            affichage.textContent = "Game Over";
+            document.removeEventListener('keydown', deplacerLeTireur);
+            clearInterval(invaderId);
+        }      
+    }
+
+ 
 }
 
-let invaderId = setInterval(bougerLesAliens,500);
+invaderId = setInterval(bougerLesAliens,500);
+
+// Laser
+
+function tirer(e){
+    let laserId;
+    let laserEnCours = tireurPosition;
+
+    function deplacementLaser(){
+        toutesLesDivs[laserEnCours].classList.remove('laser');
+        laserEnCours -= width;
+        toutesLesDivs[laserEnCours].classList.add('laser');
+
+        if(toutesLesDivs[laserEnCours].classList.contains('alien')){
+            toutesLesDivs[laserEnCours].classList.remove('laser');
+            toutesLesDivs[laserEnCours].classList.remove('alien');
+            toutesLesDivs[laserEnCours].classList.add('boom');
+
+            alienInvaders = alienInvaders.filter(el => el !== laserEnCours)
+
+            setTimeout(() => {
+                toutesLesDivs[laserEnCours].classList.remove('boom');    
+            }, 100);
+            clearInterval(laserId);
+
+            resultat++;
+            if(resultat === 36){
+                affichage.textContent = "Bravo, c'est gagné !";
+                clearInterval(invaderId);
+            } else{
+                affichage.textContent = `Score : ${resultat}`;
+            }
+        }
+
+        if(laserEnCours < width){
+            clearInterval(laserId);
+            setTimeout(() => {
+                toutesLesDivs[laserEnCours].classList.remove('laser');
+            }, 100);
+        }
+    }
+        
+    if(e.keyCode === 32){
+        laserId = setInterval(() => {
+            deplacementLaser();
+        }, 100)
+    }
+}
+
+document.addEventListener('keyup', tirer);
+
+
